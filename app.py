@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 import tensorflow as tf
 import numpy as np
-from skimage import io
+# from skimage import io
 import os
 from PIL import Image
 import sys
