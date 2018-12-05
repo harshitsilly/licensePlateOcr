@@ -12,7 +12,7 @@ h5py
 opencv-python
 matplotlib
 # re
-json
-itertools
-random
+# json
+# itertools
+# random
 skimage
