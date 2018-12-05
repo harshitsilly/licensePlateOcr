@@ -15,4 +15,4 @@ matplotlib
 # json
 # itertools
 # random
-skimage
+# skimage
