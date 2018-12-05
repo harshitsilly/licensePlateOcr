@@ -11,7 +11,7 @@ import datetime
 # import editdistance
 import numpy as np
 from scipy import ndimage
-import pylab
+# import pylab
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from keras import backend as K
