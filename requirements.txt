@@ -7,7 +7,7 @@ pillow
 keras
 numpy
 tensorflow
-h5p
+h5py
 pylab
 opencv-python
 matplotlib
