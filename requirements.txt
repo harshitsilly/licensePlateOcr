@@ -8,7 +8,7 @@ keras
 numpy
 tensorflow
 h5py
-pylab
+# pylab
 opencv-python
 matplotlib
 re
