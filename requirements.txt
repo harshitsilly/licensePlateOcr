@@ -3,7 +3,7 @@ gunicorn
 Flask
 Flask-Compress
 scikit-learn
-PIL
+pillow
 keras
 numpy
 tensorflow
