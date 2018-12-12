@@ -104,6 +104,11 @@ def LoadData(paths):
     
     return np.array(xs)
 
+@app.route('/processLicensePlateImage', methods=['POST'])
+def processLicensePlateImage():
+    global model,session
+    load_model(8192)
+    zipFile = request.files['file']
 
 
 
