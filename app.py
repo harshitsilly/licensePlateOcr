@@ -1,10 +1,11 @@
 from flask import Flask, jsonify, request
 import tensorflow as tf
 import numpy as np
-# from skimage import io
+from skimage import io
 import os
 from PIL import Image
 import sys
+import zipfile
 from ocr_model import decode_batch,getOCRModel,getImageData
 
 
@@ -109,9 +110,46 @@ def processLicensePlateImage():
     global model,session
     load_model(8192)
     zipFile = request.files['file']
+    fileName= zipFile.filename
+    zipFile.save(os.path.join(os.getcwd() + "\\" + fileName))
+    zfile = zipfile.ZipFile(os.path.join(os.getcwd() + "\\" + fileName))
+    totalImages = len(zfile.infolist())
+    for finfo in zfile.infolist():
+        ifile = zfile.open(finfo)
+        fileName = finfo.filename
+        saveLicensePlateImage(ifile,fileName)
+    session.close()
+    return "Successfully created data for ocr"
 
-
-
+def saveLicensePlateImage(ifile,imageFormat):
+    global model,session
+    
+    img1 = Image.open(ifile)
+    image = img1
+    basewidth = 128 
+    hsize = 64
+    img = img1.resize((basewidth,hsize), Image.ANTIALIAS)
+    img.save("x" + imageFormat)
+    X_test = LoadData("x" + imageFormat)
+    pixel = X_test.shape[1]*X_test.shape[2]
+    
+    if len(X_test.shape) > 3 : 
+        X_test = np.dot(X_test[...,:3], [0.299, 0.587, 0.114])
+    X2_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1]*X_test.shape[2]))
+    # TODO: model evaluation
+    # eg: prediction = model.eval()
+    predictions = model.output.eval(session=session, feed_dict={model.x_placeholder: X2_test})
+    
+    # TODO: return prediction
+    # eg: return jsonify({'score': 0.95})
+    
+    predictions = (predictions+1) * (img1.size[0]/2, img1.size[1]/2, img1.size[0]/2, img1.size[1]/2) 
+    predictions = predictions.tolist()
+    
+    for box in predictions:
+        box1= tuple(box)
+        ic = image.crop(box1)
+        ic.save("images\\" + imageFormat.split('_')[1])
 # The request method is POST (this method enables your to send arbitrary data to the endpoint in the request body, including images, JSON, encoded-data, etc.)
 @app.route('/getLicenseImage', methods=["POST"])
 def evaluate():
@@ -126,8 +164,17 @@ def evaluate():
     fileName = os.path.join(os.getcwd() + "\\" + Imagefile.filename)
     imageFormat = Imagefile.filename
     Imagefile.save(fileName)
-    basewidth = 128 # MNIST image width
+    # MNIST image width
+    pred_texts = getPredictedText(fileName,imageFormat)
+
+    return jsonify({'number': pred_texts})
+
+# The following is for running command `python app.py` in local development, not required for serving on FloydHub.
+
+def getPredictedText(fileName,imageFormat):
+    global model,session
     img1 = Image.open(fileName)
+    basewidth = 128 
     hsize = 64
     img = img1.resize((basewidth,hsize), Image.ANTIALIAS)
     img.save("x" + imageFormat)
@@ -161,12 +208,7 @@ def evaluate():
     X_data[0] = img
     net_out_value = ocrSession.run(net_out, feed_dict={net_inp:X_data})
     pred_texts = decode_batch(net_out_value)
-    print(pred_texts)
-
-    return jsonify({'number': pred_texts})
-
-# The following is for running command `python app.py` in local development, not required for serving on FloydHub.
-
+    return pred_texts
 
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")

@@ -4,3 +4,4 @@
 **json
 anpr_ocr__train
 anpr_ocr__test
+*.zip
